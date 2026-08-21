@@ -19,8 +19,25 @@ import time
 import osmium
 
 STEP = 0.05
-# Metro Manila + fringe (s, w, n, e)
-BOUNDS = (14.20, 120.85, 14.95, 121.25)
+# Coverage regions (name, s, w, n, e). Owner's priority list 2026-08-21.
+# The NCR box supersedes the original Metro Manila bounds (14.20, 120.85,
+# 14.95, 121.25) and takes in the wider NCR + Calabarzon.
+REGIONS = [
+    ("ncr-calabarzon",   13.50, 120.60, 15.10, 121.80),
+    ("metro-cebu",       10.20, 123.70, 10.55, 124.05),
+    ("metro-davao",       6.95, 125.30,  7.35, 125.75),
+    ("baguio",           16.30, 120.50, 16.50, 120.70),
+    ("iloilo",           10.60, 122.40, 10.85, 122.70),
+    ("cagayan-de-oro",    8.35, 124.50,  8.60, 124.80),
+    ("bacolod",          10.55, 122.85, 10.80, 123.10),
+    ("legazpi",          13.05, 123.65, 13.30, 123.85),
+    ("naga",             13.50, 123.05, 13.70, 123.30),
+    ("puerto-princesa",   9.65, 118.60,  9.90, 118.85),
+    ("dumaguete",         9.20, 123.20,  9.45, 123.40),
+    ("tuguegarao",       17.50, 121.60, 17.75, 121.85),
+    ("subic-olongapo",   14.70, 120.15, 14.95, 120.40),
+    ("clark-angeles",    15.05, 120.45, 15.30, 120.75),
+]
 
 
 class WayPass(osmium.SimpleHandler):
@@ -70,29 +87,35 @@ def main(pbf_path, out_dir, source_label):
     print(f"node coords resolved: {len(np_.coords)} ({time.time()-t0:.0f}s)")
 
     cells = {}  # ci -> {"nodes": {id:(lat,lon)}, "ways": []}
-    s, w_, n, e = BOUNDS
     for wid, refs, tags in wp.ways:
         pts = [np_.coords[r] for r in refs if r in np_.coords]
         if len(pts) < 2:
             continue
         lats = [p[0] for p in pts]
         lons = [p[1] for p in pts]
-        if max(lats) < s or min(lats) > n or max(lons) < w_ or min(lons) > e:
-            continue
-        c0 = cell_of(max(min(lats), s), max(min(lons), w_))
-        c1 = cell_of(min(max(lats), n), min(max(lons), e))
-        for la in range(c0[0], c1[0] + 1):
-            for lo in range(c0[1], c1[1] + 1):
-                cell = cells.setdefault((la, lo), {"nodes": {}, "ways": []})
-                cell["ways"].append({"id": wid, "nodes": refs, "tags": tags})
-                for r in refs:
-                    if r in np_.coords:
-                        cell["nodes"][r] = np_.coords[r]
+        # Union of cell ranges across every region the way touches, so
+        # overlapping regions never duplicate a way within one cell.
+        touched = set()
+        for _, s, w_, n, e in REGIONS:
+            if max(lats) < s or min(lats) > n or max(lons) < w_ or min(lons) > e:
+                continue
+            c0 = cell_of(max(min(lats), s), max(min(lons), w_))
+            c1 = cell_of(min(max(lats), n), min(max(lons), e))
+            for la in range(c0[0], c1[0] + 1):
+                for lo in range(c0[1], c1[1] + 1):
+                    touched.add((la, lo))
+        for ci in touched:
+            cell = cells.setdefault(ci, {"nodes": {}, "ways": []})
+            cell["ways"].append({"id": wid, "nodes": refs, "tags": tags})
+            for r in refs:
+                if r in np_.coords:
+                    cell["nodes"][r] = np_.coords[r]
 
     os.makedirs(out_dir, exist_ok=True)
     ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     index = {"generated": ts, "source": source_label, "step_deg": STEP,
-             "bounds": BOUNDS, "cells": []}
+             "regions": [{"name": r[0], "bounds": list(r[1:])} for r in REGIONS],
+             "cells": []}
     for ci, cell in sorted(cells.items()):
         name = cell_name(ci)
         payload = {
