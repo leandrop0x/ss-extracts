@@ -7,3 +7,5 @@ cells under `extracts-overture`.
 
 Data: (c) OpenStreetMap contributors, ODbL 1.0. Overture cells additionally
 (c) Overture Maps Foundation.
+
+Privacy policy for the SpaceSyntaxApp apps: [privacy-policy.md](privacy-policy.md)
