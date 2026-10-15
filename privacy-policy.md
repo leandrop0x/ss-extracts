@@ -1,6 +1,6 @@
 # SpaceSyntaxApp — Privacy Policy
 
-_Last updated: 8 October 2026_
+_Last updated: 15 October 2026_
 
 SpaceSyntaxApp is a space syntax analysis tool for street networks. It is
 made by Leandro Nicholas R. Poco (Consilio Operazioni Inc., Metro Manila,
@@ -99,7 +99,7 @@ with a new date at the top.
 
 ## Contact
 
-Leandro Nicholas R. Poco — leandro.poco@gmail.com
+Leandro Nicholas R. Poco — bydesign@consilio.ltd
 
 ---
 
