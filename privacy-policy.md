@@ -139,5 +139,5 @@ Leandro Nicholas R. Poco — bydesign@consilio.ltd
 
 ---
 
-Street network data © OpenStreetMap contributors, licensed under the Open
-Database License (ODbL). Imagery © Esri and its data providers.
+Credits and data licences (OpenStreetMap, Esri, depthmapX and the research the
+app builds on): see [Credits and licences](credits.md).
